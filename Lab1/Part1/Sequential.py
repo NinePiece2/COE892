@@ -40,80 +40,65 @@ try:
 except FileExistsError:
     pass
 
+def run_rover(rover_num):
+    moves = list(json.loads(requests.get(base_url + str(i)).text)['data']['moves'])
+    #print(moves)
 
-for i in range(1, numOfRovers + 1):
-    # Get Rover Commands using the API
-    response = requests.get(base_url + str(i))
-    commands = json.loads(response.text)
-    moves = commands['data']['moves']
-    moves = list(moves)
-    print(moves)
     output = [[0 for _ in range(cols)] for _ in range(rows)]
     dug = [[0 for _ in range(cols)] for _ in range(rows)]
+
     output[0][0] = '*'
     x, y = 0, 0
-    direction = 0
+
     while moves:
         move = moves.pop(0)
         if move == 'L':
-            if direction == 0:
-                direction = 1
-            elif direction == 1:
-                direction = 2
-            elif direction == 2:
-                direction = 3
-            elif direction == 3:
-                direction = 0
-            
-            direction = 3
-        elif move == 'R':
-            if direction == 0:
-                direction = 3
-            elif direction == 1:
-                direction = 0
-            elif direction == 2:
-                direction = 1
-            elif direction == 3:
-                direction = 2
+            new_x, new_y = x, y - 1
 
-            direction = 1
+        elif move == 'R':
+            new_x, new_y = x, y + 1
+
         elif move == 'M':
-            if direction == 0:
-                y+=1
-            elif direction == 1:
-                x+=1
-            elif direction == 2:
-                y-=1
-            elif direction == 3:
-                x-=1
-            if x < 0 or y < 0 or x >= cols or y >= rows:
-                if x >= cols:
-                    x-=1
-                elif y >= rows:
-                    y-=1
-                elif x < 0:
-                    x+=1
-                elif y < 0:
-                    y+=1
-                
-                print(x, y)
-            else:
-                output[y][x] = '*'
-                print('\n')
-                for row in output:
-                    print(' '.join(map(str, row)))
-                print('\n')
-                if map_data[y][x] == 1:
-                    if dug[y][x] == 0:
-                        print(f'Mine Found! {x, y}')
-                        break
+            new_x, new_y = x + 1, y
+            
         elif move == 'D':
-            dug[y][x] = 1
+            dug[x][y] = 1
             #print('Mine Found!')
             continue
         else:
             print('Invalid Command')
         
+        if 0 <= new_x < rows and 0 <= new_y < cols:
+            if output[new_x][new_y] == "1":
+                if dug[x][y] == 1:
+                    print("Dig")
+                    output[new_x][new_y] = "0"
+                else:
+                    print("Mine exploded")
+                    output[new_x][new_y] = "0"
+                    break
+
+            # Move rover to new position
+            x, y = new_x, new_y
+            output[x][y] = "*"
+
+            # print('\n')
+            # for row in output:
+            #     print(' '.join(map(str, row)))
+            # print('\n')
+            # if map_data[y][x] == 1:
+            #     if dug[y][x] == 0:
+            #         print(f'Mine Found! {x, y}')
+            #         break
+    
+    return output
+
+
+for i in range(1, numOfRovers + 1): 
+    output = run_rover(i)
+        
     # Printing the output nicely
+    print(f'Rover {i}')
     for row in output:
         print(' '.join(map(str, row)))
+    print('\n')
