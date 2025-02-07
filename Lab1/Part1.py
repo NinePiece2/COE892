@@ -11,7 +11,7 @@ minesFilename = 'mines.txt'
 rows, cols = 0, 0
 map_data = []
 seqOutputBase = 'SequentialOutput'
-paraOutputBase = 'ParallellOutput'
+paraOutputBase = 'ParallelOutput'
 
 # Enumerate Direction
 # Down - 0
