@@ -6,7 +6,7 @@ import time
 import hashlib
 import itertools
 import string
-import copy  # Import copy module to create deep copies
+import copy
 
 base_url = 'https://coe892.reev.dev/lab1/rover/'
 numOfRovers = 10
@@ -14,8 +14,6 @@ mapFilename = 'map1.txt'
 minesFilename = 'mines.txt'
 rows, cols = 0, 0
 map_data = []
-seqOutputBase = 'SequentialOutput'
-paraOutputBase = 'ParallelOutput'
 
 def load_mines(filename):
     with open(filename, 'r') as f:
@@ -23,7 +21,7 @@ def load_mines(filename):
 
 def find_valid_pin(serial_number):
     charset = string.ascii_letters + string.digits
-    for length in range(1, 6):  # Limiting PIN length to 5 for efficiency
+    for length in range(1, 6):
         for pin in itertools.product(charset, repeat=length):
             pin = ''.join(pin)
             temp_key = serial_number + pin
@@ -55,16 +53,16 @@ def run_rover(rover_num, map_data_cpy, mines_cpy):
         elif move == 'M' and x < rows - 1:
             x += 1
         
-        if map_data_cpy[x][y] == 1:  # Mine detected
+        if map_data_cpy[x][y] == 1:
             if isDug:
                 serial_number = mines_cpy.pop(0) if mines_cpy else 'UNKNOWN'
                 pin = find_valid_pin(serial_number)
                 if pin:
-                    map_data_cpy[x][y] = 0  # Mine disarmed
+                    map_data_cpy[x][y] = 0
                     output[x][y] = '*'
                     continue
             output[x][y] = '*'
-            break  # Rover explodes
+            break
         output[x][y] = '*'
         currentPointer += 1
 
@@ -72,20 +70,23 @@ def run_rover(rover_num, map_data_cpy, mines_cpy):
 initial_time = time.time()
 for i in range(1, numOfRovers + 1):
     map_data_copy = copy.deepcopy(map_data)
-    mines_copy = list(mines)  # Independent copy for each rover
+    mines_copy = list(mines)  
     run_rover(i, map_data_copy, mines_copy)
-print(f'Sequential Time: {time.time() - initial_time}')
+final_time = time.time()
+print(f'Sequential Time: {final_time - initial_time}')
 
 # Parallel Execution
 thread_list = []
 initial_time = time.time()
 for i in range(1, numOfRovers + 1):
-    map_data_copy = copy.deepcopy(map_data)  # Unique copy per thread
-    mines_copy = list(mines)  # Unique mine list per thread
+    map_data_copy = copy.deepcopy(map_data)
+    mines_copy = list(mines)
     thread = threading.Thread(target=run_rover, args=(i, map_data_copy, mines_copy))
     thread_list.append(thread)
     thread.start()
 
 for thread in thread_list:
     thread.join()
-print(f'Parallel Time: {time.time() - initial_time}')
+final_time = time.time()
+
+print(f'Parallel Time: {final_time - initial_time}')
