@@ -35,29 +35,29 @@ class RoverServiceStub(object):
             channel: A grpc.Channel.
         """
         self.GetMap = channel.unary_unary(
-                '/RoverService/GetMap',
-                request_serializer=messaging__pb2.Empty.SerializeToString,
+                '/messaging.RoverService/GetMap',
+                request_serializer=messaging__pb2.Null.SerializeToString,
                 response_deserializer=messaging__pb2.MapData.FromString,
                 _registered_method=True)
         self.GetCommandStream = channel.unary_stream(
-                '/RoverService/GetCommandStream',
-                request_serializer=messaging__pb2.Empty.SerializeToString,
+                '/messaging.RoverService/GetCommandStream',
+                request_serializer=messaging__pb2.CommandRequest.SerializeToString,
                 response_deserializer=messaging__pb2.Command.FromString,
                 _registered_method=True)
         self.GetMineSerialNumber = channel.unary_unary(
-                '/RoverService/GetMineSerialNumber',
-                request_serializer=messaging__pb2.MineLocation.SerializeToString,
-                response_deserializer=messaging__pb2.MineSerial.FromString,
+                '/messaging.RoverService/GetMineSerialNumber',
+                request_serializer=messaging__pb2.Null.SerializeToString,
+                response_deserializer=messaging__pb2.Serial.FromString,
                 _registered_method=True)
         self.ReportCommandExecutionStatus = channel.unary_unary(
-                '/RoverService/ReportCommandExecutionStatus',
-                request_serializer=messaging__pb2.CommandStatus.SerializeToString,
-                response_deserializer=messaging__pb2.Empty.FromString,
+                '/messaging.RoverService/ReportCommandExecutionStatus',
+                request_serializer=messaging__pb2.Status.SerializeToString,
+                response_deserializer=messaging__pb2.Null.FromString,
                 _registered_method=True)
         self.ShareMinePIN = channel.unary_unary(
-                '/RoverService/ShareMinePIN',
-                request_serializer=messaging__pb2.MinePIN.SerializeToString,
-                response_deserializer=messaging__pb2.Empty.FromString,
+                '/messaging.RoverService/ShareMinePIN',
+                request_serializer=messaging__pb2.PIN.SerializeToString,
+                response_deserializer=messaging__pb2.Null.FromString,
                 _registered_method=True)
 
 
@@ -99,34 +99,34 @@ def add_RoverServiceServicer_to_server(servicer, server):
     rpc_method_handlers = {
             'GetMap': grpc.unary_unary_rpc_method_handler(
                     servicer.GetMap,
-                    request_deserializer=messaging__pb2.Empty.FromString,
+                    request_deserializer=messaging__pb2.Null.FromString,
                     response_serializer=messaging__pb2.MapData.SerializeToString,
             ),
             'GetCommandStream': grpc.unary_stream_rpc_method_handler(
                     servicer.GetCommandStream,
-                    request_deserializer=messaging__pb2.Empty.FromString,
+                    request_deserializer=messaging__pb2.CommandRequest.FromString,
                     response_serializer=messaging__pb2.Command.SerializeToString,
             ),
             'GetMineSerialNumber': grpc.unary_unary_rpc_method_handler(
                     servicer.GetMineSerialNumber,
-                    request_deserializer=messaging__pb2.MineLocation.FromString,
-                    response_serializer=messaging__pb2.MineSerial.SerializeToString,
+                    request_deserializer=messaging__pb2.Null.FromString,
+                    response_serializer=messaging__pb2.Serial.SerializeToString,
             ),
             'ReportCommandExecutionStatus': grpc.unary_unary_rpc_method_handler(
                     servicer.ReportCommandExecutionStatus,
-                    request_deserializer=messaging__pb2.CommandStatus.FromString,
-                    response_serializer=messaging__pb2.Empty.SerializeToString,
+                    request_deserializer=messaging__pb2.Status.FromString,
+                    response_serializer=messaging__pb2.Null.SerializeToString,
             ),
             'ShareMinePIN': grpc.unary_unary_rpc_method_handler(
                     servicer.ShareMinePIN,
-                    request_deserializer=messaging__pb2.MinePIN.FromString,
-                    response_serializer=messaging__pb2.Empty.SerializeToString,
+                    request_deserializer=messaging__pb2.PIN.FromString,
+                    response_serializer=messaging__pb2.Null.SerializeToString,
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
-            'RoverService', rpc_method_handlers)
+            'messaging.RoverService', rpc_method_handlers)
     server.add_generic_rpc_handlers((generic_handler,))
-    server.add_registered_method_handlers('RoverService', rpc_method_handlers)
+    server.add_registered_method_handlers('messaging.RoverService', rpc_method_handlers)
 
 
  # This class is part of an EXPERIMENTAL API.
@@ -147,8 +147,8 @@ class RoverService(object):
         return grpc.experimental.unary_unary(
             request,
             target,
-            '/RoverService/GetMap',
-            messaging__pb2.Empty.SerializeToString,
+            '/messaging.RoverService/GetMap',
+            messaging__pb2.Null.SerializeToString,
             messaging__pb2.MapData.FromString,
             options,
             channel_credentials,
@@ -174,8 +174,8 @@ class RoverService(object):
         return grpc.experimental.unary_stream(
             request,
             target,
-            '/RoverService/GetCommandStream',
-            messaging__pb2.Empty.SerializeToString,
+            '/messaging.RoverService/GetCommandStream',
+            messaging__pb2.CommandRequest.SerializeToString,
             messaging__pb2.Command.FromString,
             options,
             channel_credentials,
@@ -201,9 +201,9 @@ class RoverService(object):
         return grpc.experimental.unary_unary(
             request,
             target,
-            '/RoverService/GetMineSerialNumber',
-            messaging__pb2.MineLocation.SerializeToString,
-            messaging__pb2.MineSerial.FromString,
+            '/messaging.RoverService/GetMineSerialNumber',
+            messaging__pb2.Null.SerializeToString,
+            messaging__pb2.Serial.FromString,
             options,
             channel_credentials,
             insecure,
@@ -228,9 +228,9 @@ class RoverService(object):
         return grpc.experimental.unary_unary(
             request,
             target,
-            '/RoverService/ReportCommandExecutionStatus',
-            messaging__pb2.CommandStatus.SerializeToString,
-            messaging__pb2.Empty.FromString,
+            '/messaging.RoverService/ReportCommandExecutionStatus',
+            messaging__pb2.Status.SerializeToString,
+            messaging__pb2.Null.FromString,
             options,
             channel_credentials,
             insecure,
@@ -255,9 +255,9 @@ class RoverService(object):
         return grpc.experimental.unary_unary(
             request,
             target,
-            '/RoverService/ShareMinePIN',
-            messaging__pb2.MinePIN.SerializeToString,
-            messaging__pb2.Empty.FromString,
+            '/messaging.RoverService/ShareMinePIN',
+            messaging__pb2.PIN.SerializeToString,
+            messaging__pb2.Null.FromString,
             options,
             channel_credentials,
             insecure,

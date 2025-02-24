@@ -24,27 +24,27 @@ _sym_db = _symbol_database.Default()
 
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x0fmessaging.proto\"\x07\n\x05\x45mpty\"\x16\n\x07MapData\x12\x0b\n\x03map\x18\x01 \x01(\t\"\x1a\n\x07\x43ommand\x12\x0f\n\x07\x63ommand\x18\x01 \x01(\t\"$\n\x0cMineLocation\x12\t\n\x01x\x18\x01 \x01(\x05\x12\t\n\x01y\x18\x02 \x01(\x05\"#\n\nMineSerial\x12\x15\n\rserial_number\x18\x01 \x01(\t\"1\n\rCommandStatus\x12\x0f\n\x07success\x18\x01 \x01(\x08\x12\x0f\n\x07message\x18\x02 \x01(\t\"\x16\n\x07MinePIN\x12\x0b\n\x03pin\x18\x01 \x01(\t2\xdf\x01\n\x0cRoverService\x12\x1a\n\x06GetMap\x12\x06.Empty\x1a\x08.MapData\x12&\n\x10GetCommandStream\x12\x06.Empty\x1a\x08.Command0\x01\x12\x31\n\x13GetMineSerialNumber\x12\r.MineLocation\x1a\x0b.MineSerial\x12\x36\n\x1cReportCommandExecutionStatus\x12\x0e.CommandStatus\x1a\x06.Empty\x12 \n\x0cShareMinePIN\x12\x08.MinePIN\x1a\x06.Emptyb\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x0fmessaging.proto\x12\tmessaging\"\x06\n\x04Null\"#\n\x0e\x43ommandRequest\x12\x11\n\trover_num\x18\x01 \x01(\x05\"\x16\n\x07MapData\x12\x0b\n\x03map\x18\x01 \x01(\t\"\x1a\n\x07\x43ommand\x12\x0f\n\x07\x63ommand\x18\x01 \x01(\t\"\x1f\n\x06Serial\x12\x15\n\rserial_number\x18\x01 \x01(\t\"*\n\x06Status\x12\x0f\n\x07success\x18\x01 \x01(\x08\x12\x0f\n\x07message\x18\x02 \x01(\t\"\x12\n\x03PIN\x12\x0b\n\x03pin\x18\x01 \x01(\t2\xb2\x02\n\x0cRoverService\x12-\n\x06GetMap\x12\x0f.messaging.Null\x1a\x12.messaging.MapData\x12\x43\n\x10GetCommandStream\x12\x19.messaging.CommandRequest\x1a\x12.messaging.Command0\x01\x12\x39\n\x13GetMineSerialNumber\x12\x0f.messaging.Null\x1a\x11.messaging.Serial\x12\x42\n\x1cReportCommandExecutionStatus\x12\x11.messaging.Status\x1a\x0f.messaging.Null\x12/\n\x0cShareMinePIN\x12\x0e.messaging.PIN\x1a\x0f.messaging.Nullb\x06proto3')
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
 _builder.BuildTopDescriptorsAndMessages(DESCRIPTOR, 'messaging_pb2', _globals)
 if not _descriptor._USE_C_DESCRIPTORS:
   DESCRIPTOR._loaded_options = None
-  _globals['_EMPTY']._serialized_start=19
-  _globals['_EMPTY']._serialized_end=26
-  _globals['_MAPDATA']._serialized_start=28
-  _globals['_MAPDATA']._serialized_end=50
-  _globals['_COMMAND']._serialized_start=52
-  _globals['_COMMAND']._serialized_end=78
-  _globals['_MINELOCATION']._serialized_start=80
-  _globals['_MINELOCATION']._serialized_end=116
-  _globals['_MINESERIAL']._serialized_start=118
-  _globals['_MINESERIAL']._serialized_end=153
-  _globals['_COMMANDSTATUS']._serialized_start=155
-  _globals['_COMMANDSTATUS']._serialized_end=204
-  _globals['_MINEPIN']._serialized_start=206
-  _globals['_MINEPIN']._serialized_end=228
-  _globals['_ROVERSERVICE']._serialized_start=231
-  _globals['_ROVERSERVICE']._serialized_end=454
+  _globals['_NULL']._serialized_start=30
+  _globals['_NULL']._serialized_end=36
+  _globals['_COMMANDREQUEST']._serialized_start=38
+  _globals['_COMMANDREQUEST']._serialized_end=73
+  _globals['_MAPDATA']._serialized_start=75
+  _globals['_MAPDATA']._serialized_end=97
+  _globals['_COMMAND']._serialized_start=99
+  _globals['_COMMAND']._serialized_end=125
+  _globals['_SERIAL']._serialized_start=127
+  _globals['_SERIAL']._serialized_end=158
+  _globals['_STATUS']._serialized_start=160
+  _globals['_STATUS']._serialized_end=202
+  _globals['_PIN']._serialized_start=204
+  _globals['_PIN']._serialized_end=222
+  _globals['_ROVERSERVICE']._serialized_start=225
+  _globals['_ROVERSERVICE']._serialized_end=531
 # @@protoc_insertion_point(module_scope)

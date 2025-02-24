@@ -1,47 +1,57 @@
-from concurrent import futures
 import grpc
+from concurrent import futures
+import time
+import requests
+import json
+
 import messaging_pb2
 import messaging_pb2_grpc
 
+base_url = 'https://coe892.reev.dev/lab1/rover/'
+
+# Load the 2D map from file (map1.txt)
+def load_map(filename="map1.txt"):
+    with open(filename, 'r') as f:
+        content = f.read()
+    return content
+
+def load_mines(filename="mines.txt"):
+    with open(filename, 'r') as f:
+        return [line.strip() for line in f.readlines()]
+    
+mines = load_mines("mines.txt")  
+
 class RoverServiceServicer(messaging_pb2_grpc.RoverServiceServicer):
+
     def GetMap(self, request, context):
-        # Load and return the 2D map
-        with open('map1.txt', 'r') as file:
-            map_data = file.read()
-        return messaging_pb2.MapData(map=map_data)
+        map_content = load_map("map1.txt")
+        return messaging_pb2.MapData(map=map_content)
 
     def GetCommandStream(self, request, context):
-        # Stream commands to the rover
-        with open('commands.txt', 'r') as file:
-            commands = file.readlines()
-        for cmd in commands:
-            yield messaging_pb2.Command(command=cmd.strip())
+        moves = json.loads(requests.get(base_url + str(request.rover_num)).text)['data']['moves']
+        for cmd in moves:
+            yield messaging_pb2.Command(command=cmd)
 
     def GetMineSerialNumber(self, request, context):
-        # Retrieve mine serial number based on location
-        # Implement logic to find the serial number
-        serial_number = "12345"  # Example serial number
-        return messaging_pb2.MineSerial(serial_number=serial_number)
+        serial = mines.pop(0) if mines else "UNKNOWN"
+        return messaging_pb2.Serial(serial_number=serial)
 
     def ReportCommandExecutionStatus(self, request, context):
-        # Log the command execution status
-        if request.success:
-            print(f"Rover reported success: {request.message}")
-        else:
-            print(f"Rover reported failure: {request.message}")
-        return messaging_pb2.Empty()
+        print(f"Execution status reported: success={request.success}, message='{request.message}'")
+        return messaging_pb2.Null()
 
     def ShareMinePIN(self, request, context):
-        # Log the received mine PIN
         print(f"Received mine PIN: {request.pin}")
-        return messaging_pb2.Empty()
+        return messaging_pb2.Null()
 
-def serve():
-    server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
-    messaging_pb2_grpc.add_RoverServiceServicer_to_server(RoverServiceServicer(), server)
-    server.add_insecure_port('[::]:50051')
-    server.start()
-    server.wait_for_termination()
+server = grpc.server(futures.ThreadPoolExecutor(max_workers=25))
+messaging_pb2_grpc.add_RoverServiceServicer_to_server(RoverServiceServicer(), server)
+server.add_insecure_port('[::]:50051')
+server.start()
+print("Ground Control started on port 50051.")
+try:
+    while True:
+        continue
+except KeyboardInterrupt:
+    server.stop(0)
 
-if __name__ == '__main__':
-    serve()
