@@ -1,13 +1,14 @@
 import grpc
 import messaging_pb2
 import messaging_pb2_grpc
-import threading
 import time
 import os
 import string
 import hashlib
 import itertools
 import sys
+import pika
+import json
 
 def parse_map(map_str):
     lines = map_str.strip().splitlines()
@@ -21,8 +22,8 @@ def parse_map(map_str):
 def find_valid_pin(serial_number):
     charset = string.ascii_letters + string.digits
     for length in range(1, 6):
-        for pin in itertools.product(charset, repeat=length):
-            pin = ''.join(pin)
+        for pin_tuple in itertools.product(charset, repeat=length):
+            pin = ''.join(pin_tuple)
             temp_key = serial_number + pin
             hash_value = hashlib.sha256(temp_key.encode()).hexdigest()
             if hash_value.startswith('000000'):
@@ -45,6 +46,10 @@ def run_rover(rover_num):
     command_stream = stub.GetCommandStream(messaging_pb2.CommandRequest(rover_num=rover_num))
     commands = [cmd.command for cmd in command_stream]
 
+    rabbit_conn = pika.BlockingConnection(pika.ConnectionParameters(host='192.168.8.24'))
+    rabbit_channel = rabbit_conn.channel()
+    rabbit_channel.queue_declare(queue='Demine-Queue')
+
     success = True
     message = f"Rover {rover_num} executed all commands successfully."
     i = 0
@@ -64,17 +69,23 @@ def run_rover(rover_num):
         else:
             continue
 
-        # Check if the next move is within the map boundaries.
         if not (0 <= next_x < rows and 0 <= next_y < cols):
             continue
 
         if grid[next_x][next_y] == 1:
             if dig_flag == 'D':
                 serial_response = stub.GetMineSerialNumber(messaging_pb2.Null())
-                pinNum = find_valid_pin(serial_response.serial_number)
-                pin = messaging_pb2.PIN(pin=pinNum)
-                stub.ShareMinePIN(pin)
-
+                serial_number = serial_response.serial_number
+                task = {
+                    "rover_num": rover_num,
+                    "x": next_x,
+                    "y": next_y,
+                    "serial_number": serial_number
+                }
+                rabbit_channel.basic_publish(exchange='',
+                                             routing_key='Demine-Queue',
+                                             body=json.dumps(task))
+                # Move rover to the next cell
                 x, y = next_x, next_y
                 output[x][y] = '*'
             else:
@@ -87,7 +98,6 @@ def run_rover(rover_num):
             x, y = next_x, next_y
             output[x][y] = '*'
 
-    # Write the rover's path to an output file.
     output_folder = "Output"
     if not os.path.exists(output_folder):
         os.mkdir(output_folder)
@@ -96,29 +106,14 @@ def run_rover(rover_num):
         for row in output:
             f.write(" ".join(row) + "\n")
     
-    # Report the execution status back to the server.
-    status = messaging_pb2.Status(success=success, message=message)
-    stub.ReportCommandExecutionStatus(status)
+    # status = messaging_pb2.Status(success=success, message=message)
+    # stub.ReportCommandExecutionStatus(status)
     print(f"Rover {rover_num} finished execution with status: {message}")
-
-# num_of_rovers = 10
-# thread_list = []
-# initial_time = time.time()
-
-# for i in range(1, num_of_rovers + 1):
-#     thread = threading.Thread(target=run_rover, args=(i,))
-#     thread_list.append(thread)
-#     thread.start()
-
-# for thread in thread_list:
-#     thread.join()
-
-# final_time = time.time()
-# print(f"Execution time: {final_time - initial_time}")
+    rabbit_conn.close()
 
 if __name__ == "__main__":
     if len(sys.argv) < 2:
-        print("Usage: python client.py <rover_num>")
+        print("Usage: python rover_client.py <rover_num>")
         exit(1)
     
     rover_num = int(sys.argv[1])

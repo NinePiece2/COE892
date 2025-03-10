@@ -1,0 +1,38 @@
+syntax = "proto3";
+
+package messaging;
+
+service RoverService {
+  rpc GetMap(Null) returns (MapData);
+  rpc GetCommandStream(CommandRequest) returns (stream Command);
+  rpc GetMineSerialNumber(Null) returns (Serial);
+  rpc ReportCommandExecutionStatus(Status) returns (Null);
+  rpc ShareMinePIN(PIN) returns (Null);
+}
+
+message Null {}
+
+message CommandRequest {
+  int32 rover_num = 1;
+}
+
+message MapData {
+  string map = 1;
+}
+
+message Command {
+  string command = 1;
+}
+
+message Serial {
+  string serial_number = 1;
+}
+
+message Status {
+  bool success = 1;
+  string message = 2;
+}
+
+message PIN {
+  string pin = 1;
+}
