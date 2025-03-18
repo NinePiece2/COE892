@@ -3,9 +3,9 @@ name: Deploy
 on:
   push:
     branches:
-      - master
+      - main
     paths:
-      - docker-compose.yml
+      - Lab4-5/**
   repository_dispatch:
     types: [build-completed]
   workflow_dispatch:
