@@ -1,1 +1,1 @@
-npx concurrently "npm start" "fastapi dev ./API/server.py"
+npx concurrently "npm start" "fastapi run ./API/server.py"
