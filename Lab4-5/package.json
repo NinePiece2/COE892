@@ -10,6 +10,7 @@
     "all-dev": "concurrently \"npm run dev\" \"cross-env PYTHONIOENCODING=utf-8 fastapi dev ./API/server.py\""
   },
   "dependencies": {
+    "@fontsource/poppins": "^5.2.5",
     "coe892lab4-5": "file:",
     "concurrently": "^9.1.2",
     "next": "15.2.3",
