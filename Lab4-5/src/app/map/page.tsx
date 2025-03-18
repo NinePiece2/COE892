@@ -24,7 +24,7 @@ const MapPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
+    <div className="min-h-screen bg-gray-900 p-6">
       <div className="max-w-4xl mx-auto bg-white shadow-md rounded p-8">
         <h1 className="text-2xl font-bold mb-4">Field Map</h1>
         <div className="overflow-auto">
