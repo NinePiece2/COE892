@@ -31,7 +31,7 @@ jobs:
             context: ./Lab4-5
             file: ./Lab4-5/Dockerfile
             push: true
-            tags: ${{ secrets.DOCKER_USERNAME }}/coe892lab4:latest
+            tags: coe892lab42025.azurecr.io/${{ secrets.DOCKER_USERNAME }}/coe892lab4:latest
 
         # - name: Remove unused Docker images
         #   run: docker image prune -af
