@@ -14,7 +14,7 @@ RUN apt-get install -y python3-pip
 RUN apt-get clean -y && apt-get autoclean -y
 
 COPY --from=build /app/requirements.txt ./
-RUN pip3 install -f requirements.txt --break-system-packages
+RUN pip3 install --break-system-packages -r requirements.txt
 
 WORKDIR /app
 COPY --from=build /app/package.json ./
