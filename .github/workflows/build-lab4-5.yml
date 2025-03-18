@@ -35,3 +35,8 @@ jobs:
 
         # - name: Remove unused Docker images
         #   run: docker image prune -af
+        - name: Trigger Deploy Workflow
+          uses: peter-evans/repository-dispatch@v3
+          with:
+            token: ${{ secrets.GITHUB_TOKEN }}
+            event-type: build-completed

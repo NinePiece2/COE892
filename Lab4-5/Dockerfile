@@ -13,8 +13,9 @@ RUN apt-get update && apt-get install -y python3
 RUN apt-get install -y python3-pip
 RUN apt-get clean -y && apt-get autoclean -y
 
+RUN pip3 install "fastapi[standard]"
 COPY --from=build /app/requirements.txt ./
-RUN pip3 install --break-system-packages -r requirements.txt
+#RUN pip3 install --break-system-packages -r requirements.txt
 
 WORKDIR /app
 COPY --from=build /app/package.json ./
