@@ -24,7 +24,7 @@ RUN npm ci --only=production
 
 COPY --from=build /app/.next ./.next
 COPY --from=build /app/public ./public
-COPY --from=build /app/API ./
+COPY --from=build /app/API ./API
 COPY --from=build /app/run.sh ./
 
 EXPOSE 3000
