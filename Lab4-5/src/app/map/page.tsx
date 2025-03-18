@@ -9,7 +9,11 @@ const MapPage: React.FC = () => {
   useEffect(() => {
     fetch(`/api/proxy/map`)
       .then((res) => res.json())
-      .then((data) => setMap(data))
+      .then((data) =>{
+         setMap(data),
+          setWidth(data[0].length),
+          setHeight(data.length)
+        })
       .catch((err) => console.error(err));
   }, []);
 
@@ -21,6 +25,7 @@ const MapPage: React.FC = () => {
     });
     const data = await res.json();
     setMap(data.map);
+
   };
 
   return (

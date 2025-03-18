@@ -16,7 +16,6 @@ const MinesPage: React.FC = () => {
     serial_number: '',
   });
 
-  // Use the proxied API URL (no need for API_BASE_URL since proxying is done by Next.js)
   const fetchMines = async () => {
     const res = await fetch(`/api/proxy/mines`);
     const data = await res.json();
