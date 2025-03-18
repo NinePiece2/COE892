@@ -1,0 +1,45 @@
+name: Deploy
+
+on:
+  push:
+    branches:
+      - master
+    paths:
+      - docker-compose.yml
+  repository_dispatch:
+    types: [build-completed]
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-environment
+  cancel-in-progress: false  # Prevents new deployments from canceling an ongoing one
+
+jobs:
+  deploy:
+    runs-on: self-hosted
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ secrets.DOCKER_REGISTRY }}
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Pull latest Docker images
+        run: docker-compose pull
+
+      - name: Remove Old Container
+        run: docker-compose down
+
+      - name: Deploy with Docker Compose
+        env:
+          ASPNETCORE_ENVIRONMENT: ${{ secrets.ASPNETCORE_ENVIRONMENT }}
+          SyncfusionLicense: ${{ secrets.SyncfusionLicense }}
+          JWT_Key: ${{ secrets.JWT_Key }}
+        run: docker-compose up -d
+
+      - name: Remove unused Docker images
+        run: docker image prune -af
