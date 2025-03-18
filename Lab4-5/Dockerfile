@@ -28,6 +28,7 @@ COPY --from=build /app/API ./API
 COPY --from=build /app/run.sh ./
 
 EXPOSE 3000
+EXPOSE 8000
 
 RUN chmod +x run.sh
 CMD ["./run.sh"]
