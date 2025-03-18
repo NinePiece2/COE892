@@ -1,40 +1,39 @@
-"use client";
-import React, { useState, useEffect, useRef } from 'react';
+"use client"; 
+import React, { useState, useEffect, useRef } from "react";
 
 const ControlPage: React.FC = () => {
   const [messages, setMessages] = useState<string[]>([]);
-  const [command, setCommand] = useState<string>('');
+  const [command, setCommand] = useState<string>("");
   const wsRef = useRef<WebSocket | null>(null);
-  const roverId = 1; // Adjust this as needed.
-  
-  // Using the current window host (assuming your FastAPI backend is accessible via the same domain)
-  const WS_URL = `ws://${window.location.host}/ws/rover/${roverId}`;
+  const roverId = 1;
+
+  const [wsUrl, setWsUrl] = useState<string | null>(null);
 
   useEffect(() => {
-    wsRef.current = new WebSocket(WS_URL);
-    wsRef.current.onopen = () => {
-      setMessages((prev) => [...prev, 'Connected to WebSocket']);
-    };
-    wsRef.current.onmessage = (event) => {
-      setMessages((prev) => [...prev, `Server: ${event.data}`]);
-    };
-    wsRef.current.onerror = (err) => {
-      setMessages((prev) => [...prev, `Error: ${err}`]);
-    };
-    wsRef.current.onclose = () => {
-      setMessages((prev) => [...prev, 'Disconnected from WebSocket']);
-    };
+    if (typeof window !== "undefined") {
+      setWsUrl(`ws://${window.location.host}/ws/rover/${roverId}`);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!wsUrl) return;
+
+    wsRef.current = new WebSocket(wsUrl);
+    wsRef.current.onopen = () => setMessages((prev) => [...prev, "Connected to WebSocket"]);
+    wsRef.current.onmessage = (event) => setMessages((prev) => [...prev, `Server: ${event.data}`]);
+    wsRef.current.onerror = (err) => setMessages((prev) => [...prev, `Error: ${err}`]);
+    wsRef.current.onclose = () => setMessages((prev) => [...prev, "Disconnected from WebSocket"]);
 
     return () => {
       if (wsRef.current) wsRef.current.close();
     };
-  }, [WS_URL]);
+  }, [wsUrl]); // Re-run only when wsUrl is set
 
   const sendCommand = () => {
     if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
       wsRef.current.send(command);
       setMessages((prev) => [...prev, `Sent: ${command}`]);
-      setCommand('');
+      setCommand("");
     }
   };
 
