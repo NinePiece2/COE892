@@ -3,12 +3,16 @@ FROM node:23-bookworm AS build
 WORKDIR /app
 COPY package.json package-lock.json ./
 RUN npm install
+ENV NEXT_TELEMETRY_DISABLED=1
 
 COPY . .
 RUN npm run build
 
 FROM node:23-bookworm AS deploy
+
 ENV PYTHONIOENCODING=utf-8
+ENV NEXT_TELEMETRY_DISABLED=1
+
 RUN apt-get update && apt-get install -y python3
 RUN apt-get install -y python3-pip
 RUN apt-get clean -y && apt-get autoclean -y
