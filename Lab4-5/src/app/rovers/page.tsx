@@ -46,7 +46,7 @@ const RoversPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-900 p-6">
+    <div className="80vh p-6">
       <div className="max-w-3xl mx-auto bg-white shadow-md rounded p-8">
         <h1 className="text-2xl font-bold mb-4">Rovers Management</h1>
         <div className="mb-6">

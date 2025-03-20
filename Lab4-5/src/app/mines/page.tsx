@@ -15,18 +15,53 @@ const MinesPage: React.FC = () => {
     y: 0,
     serial_number: '',
   });
+  const [error, setError] = useState<string | null>(null);
+  const [width, setWidth] = useState<number>(10);
+  const [height, setHeight] = useState<number>(10);
+
+  // Define bounds for coordinates
+  const MIN_X = 0;
+  const MIN_Y = 0;
+  const SERIAL_LENGTH = 10;
 
   const fetchMines = async () => {
     const res = await fetch(`/api/proxy/mines`);
     const data = await res.json();
     setMines(data);
+
+    await fetch(`/api/proxy/map`)
+      .then((res) => res.json())
+      .then((data) =>{
+          setWidth(data[0].length),
+          setHeight(data.length)
+        })
+      .catch((err) => console.error(err));
   };
 
   useEffect(() => {
     fetchMines();
   }, []);
 
+  const validateInput = () => {
+    if (newMine.x < MIN_X || newMine.x > width - 1) {
+      setError(`X coordinate must be between ${MIN_X} and ${width - 1}`);
+      return false;
+    }
+    if (newMine.y < MIN_Y || newMine.y > height - 1) {
+      setError(`Y coordinate must be between ${MIN_Y} and ${height - 1}`);
+      return false;
+    }
+    if (newMine.serial_number.length !== SERIAL_LENGTH) {
+      setError(`Serial number must be exactly ${SERIAL_LENGTH} characters long`);
+      return false;
+    }
+    setError(null);
+    return true;
+  };
+
   const createMine = async () => {
+    if (!validateInput()) return;
+
     await fetch(`/api/proxy/mines`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -41,11 +76,12 @@ const MinesPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-900 p-6">
+    <div className="min-h-screen p-6">
       <div className="max-w-3xl mx-auto bg-white shadow-md rounded p-8">
         <h1 className="text-2xl font-bold mb-4">Mines Management</h1>
         <div className="mb-6">
           <h2 className="text-xl font-semibold mb-2">Create New Mine</h2>
+          {error && <p className="text-red-500 mb-2">{error}</p>}
           <div className="space-y-4">
             <div>
               <label className="block">
@@ -54,7 +90,7 @@ const MinesPage: React.FC = () => {
                   type="number"
                   value={newMine.x}
                   onChange={(e) =>
-                    setNewMine({ ...newMine, x: parseInt(e.target.value) })
+                    setNewMine({ ...newMine, x: parseInt(e.target.value) || 0 })
                   }
                   className="border rounded p-1 ml-2"
                 />
@@ -67,7 +103,7 @@ const MinesPage: React.FC = () => {
                   type="number"
                   value={newMine.y}
                   onChange={(e) =>
-                    setNewMine({ ...newMine, y: parseInt(e.target.value) })
+                    setNewMine({ ...newMine, y: parseInt(e.target.value) || 0 })
                   }
                   className="border rounded p-1 ml-2"
                 />

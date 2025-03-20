@@ -3,7 +3,7 @@ import React from 'react';
 
 const Home: React.FC = () => {
   return (
-    <div className="min-h-screen bg-gray-900 p-6">
+    <div className="80vh p-6">
       <div className="max-w-xl mx-auto bg-white shadow-lg rounded-lg p-8">
         <h1 className="text-3xl font-bold mb-6 text-center">Operator Dashboard</h1>
         <ul className="space-y-4">
