@@ -124,7 +124,7 @@ const MinesPage: React.FC = () => {
             </div>
             <button
               onClick={createMine}
-              className="mt-2 px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600"
+              className="mt-2 px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600 cursor-pointer"
             >
               Create Mine
             </button>
@@ -143,7 +143,7 @@ const MinesPage: React.FC = () => {
                 </span>
                 <button
                   onClick={() => deleteMine(mine.id)}
-                  className="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600"
+                  className="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600 cursor-pointer"
                 >
                   Delete
                 </button>

@@ -51,7 +51,7 @@ const ControlPage: React.FC = () => {
           />
           <button
             onClick={sendCommand}
-            className="px-4 py-2 bg-indigo-500 text-white rounded hover:bg-indigo-600"
+            className="px-4 py-2 bg-indigo-500 text-white rounded hover:bg-indigo-600 cursor-pointer"
           >
             Send Command
           </button>
