@@ -37,7 +37,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     res.status(response.status);
     // Forward the content type header if available.
     if (contentType) res.setHeader('content-type', contentType);
-    
+    //console.log(response);
+
     // If the response is JSON, parse and return it; otherwise, return as text.
     const data = contentType && contentType.includes('application/json')
       ? await response.json()
