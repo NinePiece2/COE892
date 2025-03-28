@@ -36,6 +36,9 @@ class Rover(BaseModel):
     commands: Optional[str] = ""  # List of commands as a string
     output: Optional[str] = ""  # Output path for the rover
 
+class RoverUpdate(BaseModel):
+    commands: Optional[str] = None  # List of commands as a string
+
 # In-memory storage for rovers.
 rovers_db = {}
 rover_id_counter = 1
@@ -45,7 +48,11 @@ def get_map():
     """
     Retrieve the 2D array of the field.
     """
-    field_with_mines = field_map
+    global field_map
+    field_with_mines = [[0 for _ in range(len(field_map))] for _ in range(len(field_map[0]))]
+    #field_with_mines = field_map.copy()
+    print(f"Field without mines: {field_with_mines}")
+    print(f"Field with mines: {mines_db}")
     for i in range(1, len(mines_db) + 1):
         print(f"Mine {i} added at ({mines_db[i].x}, {mines_db[i].y})")
         field_with_mines[mines_db[i].y][mines_db[i].x] = 1
@@ -64,6 +71,11 @@ def update_map(map_update: MapUpdate):
         y = mines_db[i].y
         if x >= map_update.height or y >= map_update.width:
             del mines_db[i]
+            
+    field_with_mines = field_map
+    for i in range(1, len(mines_db) + 1):
+        print(f"Mine {i} added at ({mines_db[i].x}, {mines_db[i].y})")
+        field_with_mines[mines_db[i].y][mines_db[i].x] = 1
         
     return {"message": "Map updated", "map": field_map}
 
@@ -169,7 +181,7 @@ def delete_rover(rover_id: int):
     return {"message": "Rover deleted"}
 
 @app.put("/rovers/{rover_id}", response_model=Rover)
-def update_rover_commands(rover_id: int, commands: str):
+def update_rover_commands(rover_id: int, update: RoverUpdate):
     """
     Update the list of commands for a rover.
     This is allowed only if the rover status is "Not Started" or "Finished".
@@ -182,7 +194,7 @@ def update_rover_commands(rover_id: int, commands: str):
             status_code=400,
             detail="Cannot update commands if rover is in Moving or Eliminated status"
         )
-    rover.commands = commands
+    rover.commands = update.commands
     rovers_db[rover_id] = rover
     return rover
 

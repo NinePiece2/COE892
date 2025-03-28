@@ -20,6 +20,10 @@ const RoversPage: React.FC = () => {
   // Track dispatch results keyed by rover ID (e.g. final messages)
   const [dispatchResults, setDispatchResults] = useState<{ [roverId: number]: string }>({});
 
+  // For inline editing of a rover's commands.
+  const [editingRoverId, setEditingRoverId] = useState<number | null>(null);
+  const [editRoverCmd, setEditRoverCmd] = useState<string>("");
+
   const fetchRovers = async () => {
     const res = await fetch(`/api/proxy/rovers`);
     const data = await res.json();
@@ -31,6 +35,8 @@ const RoversPage: React.FC = () => {
   }, []);
 
   const createRover = async () => {
+    // Create rover only if some commands have been entered.
+    if (!newRoverCmd.trim()) return;
     await fetch(`/api/proxy/rovers`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -51,8 +57,7 @@ const RoversPage: React.FC = () => {
       const res = await fetch(`/api/proxy/rovers/${id}/dispatch`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-        }),
+        body: JSON.stringify({}),
       });
       const updatedRover = await res.json();
 
@@ -86,6 +91,29 @@ const RoversPage: React.FC = () => {
     fetchRovers();
   };
 
+  const startEditing = (rover: Rover) => {
+    // Allow editing only if status is Not Started or Finished.
+    if (rover.status === "Not Started" || rover.status === "Finished") {
+      setEditingRoverId(rover.id);
+      setEditRoverCmd(rover.commands);
+    }
+  };
+
+  const cancelEditing = () => {
+    setEditingRoverId(null);
+    setEditRoverCmd("");
+  };
+
+  const updateRover = async (id: number) => {
+    await fetch(`/api/proxy/rovers/${id}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ commands: editRoverCmd }),
+    });
+    setEditingRoverId(null);
+    fetchRovers();
+  };
+
   return (
     <div className="min-h-screen p-6">
       <div className="max-w-3xl mx-auto bg-white shadow-md rounded p-8 overflow-hidden">
@@ -102,7 +130,12 @@ const RoversPage: React.FC = () => {
             />
             <button
               onClick={createRover}
-              className="px-4 py-2 text-white bg-green-500 rounded hover:bg-blue-600 cursor-pointer"
+              disabled={!newRoverCmd.trim()}
+              className={`px-4 py-2 text-white rounded ${
+                !newRoverCmd.trim()
+                  ? "bg-gray-400 cursor-not-allowed"
+                  : "bg-green-500 hover:bg-blue-600 cursor-pointer"
+              }`}
             >
               Create Rover
             </button>
@@ -115,6 +148,7 @@ const RoversPage: React.FC = () => {
             {rovers.map((rover) => {
               const dispatchMsg = dispatchResults[rover.id] || "";
               const isLoading = loadingRoverId === rover.id;
+              const isEditable = rover.status === "Not Started" || rover.status === "Finished";
               return (
                 <li
                   key={rover.id}
@@ -131,11 +165,22 @@ const RoversPage: React.FC = () => {
                     <p>
                       <strong>Position:</strong> {JSON.stringify(rover.position)}
                     </p>
-                    <div className="overflow-x-auto">
-                      <p className="whitespace-nowrap">
-                        <strong>Commands:</strong> {rover.commands}
-                      </p>
-                    </div>
+                    {editingRoverId === rover.id ? (
+                      <div className="overflow-x-auto">
+                        <input
+                          type="text"
+                          value={editRoverCmd}
+                          onChange={(e) => setEditRoverCmd(e.target.value)}
+                          className="border rounded p-1 w-full whitespace-nowrap"
+                        />
+                      </div>
+                    ) : (
+                      <div className="overflow-x-auto">
+                        <p className="whitespace-nowrap">
+                          <strong>Commands:</strong> {rover.commands}
+                        </p>
+                      </div>
+                    )}
                     {dispatchMsg && (
                       <div className="mt-2 whitespace-pre-wrap">
                         <strong>Result:</strong> {dispatchMsg}
@@ -144,27 +189,54 @@ const RoversPage: React.FC = () => {
                   </div>
                   {/* Actions column fixed on the right */}
                   <div className="flex-shrink-0 flex flex-col space-y-2 mt-4 md:mt-0">
-                    <button
-                      onClick={() => dispatchRover(rover.id)}
-                      disabled={isLoading}
-                      className={`px-3 py-1 bg-green-500 text-white rounded hover:bg-green-600 cursor-pointer ${
-                        isLoading ? "opacity-50" : ""
-                      }`}
-                    >
-                      {isLoading ? "Dispatching..." : "Dispatch"}
-                    </button>
-                    {isLoading && (
-                      <div
-                        className="w-6 h-6 border-4 border-blue-500 border-t-transparent border-solid rounded-full animate-spin"
-                        title="Dispatching..."
-                      ></div>
+                    {editingRoverId === rover.id ? (
+                      <>
+                        <button
+                          onClick={() => updateRover(rover.id)}
+                          className="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 cursor-pointer"
+                        >
+                          Save
+                        </button>
+                        <button
+                          onClick={cancelEditing}
+                          className="px-3 py-1 bg-gray-500 text-white rounded hover:bg-gray-600 cursor-pointer"
+                        >
+                          Cancel
+                        </button>
+                      </>
+                    ) : (
+                      <>
+                        {isEditable && (
+                          <button
+                            onClick={() => startEditing(rover)}
+                            className="px-3 py-1 bg-yellow-500 text-white rounded hover:bg-yellow-600 cursor-pointer"
+                          >
+                            Edit
+                          </button>
+                        )}
+                        <button
+                          onClick={() => dispatchRover(rover.id)}
+                          disabled={isLoading}
+                          className={`px-3 py-1 bg-green-500 text-white rounded hover:bg-green-600 cursor-pointer ${
+                            isLoading ? "opacity-50" : ""
+                          }`}
+                        >
+                          {isLoading ? "Dispatching..." : "Dispatch"}
+                        </button>
+                        {isLoading && (
+                          <div
+                            className="w-6 h-6 border-4 border-blue-500 border-t-transparent border-solid rounded-full animate-spin"
+                            title="Dispatching..."
+                          ></div>
+                        )}
+                        <button
+                          onClick={() => deleteRover(rover.id)}
+                          className="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600 cursor-pointer"
+                        >
+                          Delete
+                        </button>
+                      </>
                     )}
-                    <button
-                      onClick={() => deleteRover(rover.id)}
-                      className="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600 cursor-pointer"
-                    >
-                      Delete
-                    </button>
                   </div>
                 </li>
               );

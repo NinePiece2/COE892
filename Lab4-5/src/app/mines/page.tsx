@@ -19,7 +19,15 @@ const MinesPage: React.FC = () => {
   const [width, setWidth] = useState<number>(10);
   const [height, setHeight] = useState<number>(10);
 
-  // Define bounds for coordinates
+  // State for editing a mine.
+  const [editingMineId, setEditingMineId] = useState<number | null>(null);
+  const [editMine, setEditMine] = useState<Omit<Mine, 'id'>>({
+    x: 0,
+    y: 0,
+    serial_number: '',
+  });
+
+  // Define bounds for coordinates.
   const MIN_X = 0;
   const MIN_Y = 0;
   const SERIAL_LENGTH = 10;
@@ -31,10 +39,10 @@ const MinesPage: React.FC = () => {
 
     await fetch(`/api/proxy/map`)
       .then((res) => res.json())
-      .then((data) =>{
-          setWidth(data[0].length),
-          setHeight(data.length)
-        })
+      .then((data) => {
+        setWidth(data[0].length);
+        setHeight(data.length);
+      })
       .catch((err) => console.error(err));
   };
 
@@ -42,16 +50,16 @@ const MinesPage: React.FC = () => {
     fetchMines();
   }, []);
 
-  const validateInput = () => {
-    if (newMine.x < MIN_X || newMine.x > width - 1) {
+  const validateInput = (mine: Omit<Mine, 'id'>) => {
+    if (mine.x < MIN_X || mine.x > width - 1) {
       setError(`X coordinate must be between ${MIN_X} and ${width - 1}`);
       return false;
     }
-    if (newMine.y < MIN_Y || newMine.y > height - 1) {
+    if (mine.y < MIN_Y || mine.y > height - 1) {
       setError(`Y coordinate must be between ${MIN_Y} and ${height - 1}`);
       return false;
     }
-    if (newMine.serial_number.length !== SERIAL_LENGTH) {
+    if (mine.serial_number.length !== SERIAL_LENGTH) {
       setError(`Serial number must be exactly ${SERIAL_LENGTH} characters long`);
       return false;
     }
@@ -60,18 +68,41 @@ const MinesPage: React.FC = () => {
   };
 
   const createMine = async () => {
-    if (!validateInput()) return;
+    if (!validateInput(newMine)) return;
 
     await fetch(`/api/proxy/mines`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(newMine),
     });
+    setNewMine({ x: 0, y: 0, serial_number: '' });
     fetchMines();
   };
 
   const deleteMine = async (id: number) => {
     await fetch(`/api/proxy/mines/${id}`, { method: 'DELETE' });
+    fetchMines();
+  };
+
+  const startEditing = (mine: Mine) => {
+    setEditingMineId(mine.id);
+    setEditMine({ x: mine.x, y: mine.y, serial_number: mine.serial_number });
+  };
+
+  const cancelEditing = () => {
+    setEditingMineId(null);
+    setEditMine({ x: 0, y: 0, serial_number: '' });
+  };
+
+  const updateMine = async (id: number) => {
+    if (!validateInput(editMine)) return;
+
+    await fetch(`/api/proxy/mines/${id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(editMine),
+    });
+    setEditingMineId(null);
     fetchMines();
   };
 
@@ -138,15 +169,92 @@ const MinesPage: React.FC = () => {
                 key={mine.id}
                 className="p-4 bg-gray-100 rounded flex justify-between items-center"
               >
-                <span>
-                  <strong>ID:</strong> {mine.id} – Coordinates: ({mine.x}, {mine.y}) – Serial: {mine.serial_number}
-                </span>
-                <button
-                  onClick={() => deleteMine(mine.id)}
-                  className="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600 cursor-pointer"
-                >
-                  Delete
-                </button>
+                {editingMineId === mine.id ? (
+                  <div className="flex-1 space-y-2">
+                    <div>
+                      <label className="block">
+                        X:
+                        <input
+                          type="number"
+                          value={editMine.x}
+                          onChange={(e) =>
+                            setEditMine({
+                              ...editMine,
+                              x: parseInt(e.target.value) || 0,
+                            })
+                          }
+                          className="border rounded p-1 ml-2"
+                        />
+                      </label>
+                    </div>
+                    <div>
+                      <label className="block">
+                        Y:
+                        <input
+                          type="number"
+                          value={editMine.y}
+                          onChange={(e) =>
+                            setEditMine({
+                              ...editMine,
+                              y: parseInt(e.target.value) || 0,
+                            })
+                          }
+                          className="border rounded p-1 ml-2"
+                        />
+                      </label>
+                    </div>
+                    <div>
+                      <label className="block">
+                        Serial Number:
+                        <input
+                          type="text"
+                          value={editMine.serial_number}
+                          onChange={(e) =>
+                            setEditMine({
+                              ...editMine,
+                              serial_number: e.target.value,
+                            })
+                          }
+                          className="border rounded p-1 ml-2"
+                        />
+                      </label>
+                    </div>
+                    <div className="flex space-x-2">
+                      <button
+                        onClick={() => updateMine(mine.id)}
+                        className="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 cursor-pointer"
+                      >
+                        Update
+                      </button>
+                      <button
+                        onClick={cancelEditing}
+                        className="px-3 py-1 bg-gray-500 text-white rounded hover:bg-gray-600 cursor-pointer"
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <>
+                    <span>
+                      <strong>ID:</strong> {mine.id} – Coordinates: ({mine.x}, {mine.y}) – Serial: {mine.serial_number}
+                    </span>
+                    <div className="flex space-x-2">
+                      <button
+                        onClick={() => startEditing(mine)}
+                        className="px-3 py-1 bg-yellow-500 text-white rounded hover:bg-yellow-600 cursor-pointer"
+                      >
+                        Edit
+                      </button>
+                      <button
+                        onClick={() => deleteMine(mine.id)}
+                        className="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600 cursor-pointer"
+                      >
+                        Delete
+                      </button>
+                    </div>
+                  </>
+                )}
               </li>
             ))}
           </ul>
