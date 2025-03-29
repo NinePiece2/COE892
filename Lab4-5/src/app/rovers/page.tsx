@@ -8,6 +8,7 @@ interface Rover {
   commands: string;
   output?: string[];
   message?: string;
+  pins: string[];
 }
 
 const RoversPage: React.FC = () => {
@@ -164,6 +165,9 @@ const RoversPage: React.FC = () => {
                     </p>
                     <p>
                       <strong>Position:</strong> {JSON.stringify(rover.position)}
+                    </p>
+                    <p>
+                      <strong>Found Pins:</strong> {rover.pins.length > 0 ? rover.pins.join(", ") : "None"}
                     </p>
                     {editingRoverId === rover.id ? (
                       <div className="overflow-x-auto">
