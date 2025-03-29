@@ -1,17 +1,20 @@
-"use client"; 
+"use client";
 import React, { useState, useEffect, useRef } from "react";
+
+const NEXT_PUBLIC_WS_BASE_URL = process.env.NEXT_PUBLIC_WS_BASE_URL || `ws://${window.location.host}`;
 
 const ControlPage: React.FC = () => {
   const [messages, setMessages] = useState<string[]>([]);
-  const [command, setCommand] = useState<string>("");
   const wsRef = useRef<WebSocket | null>(null);
   const roverId = 1;
-
   const [wsUrl, setWsUrl] = useState<string | null>(null);
 
   useEffect(() => {
     if (typeof window !== "undefined") {
-      setWsUrl(`ws://${window.location.host}/ws/rover/${roverId}`);
+      //setWsUrl(`/api/ws/ws/rover/${roverId}`);
+      //setWsUrl(`ws://${window.location.host}/ws/rover/${roverId}`);
+      //setWsUrl(`ws://localhost:8000/ws/rover/${roverId}`);
+      setWsUrl(`${NEXT_PUBLIC_WS_BASE_URL}/ws/rover/${roverId}`);
     }
   }, []);
 
@@ -27,35 +30,37 @@ const ControlPage: React.FC = () => {
     return () => {
       if (wsRef.current) wsRef.current.close();
     };
-  }, [wsUrl]); // Re-run only when wsUrl is set
+  }, [wsUrl]);
 
-  const sendCommand = () => {
+  const handleKeyDown = (event: KeyboardEvent) => {
+    const validKeys = ["L", "R", "M", "D"];
+    const key = event.key.toUpperCase();
+    console.log("Key pressed:", key);
+    
+    if (validKeys.includes(key)) {
+      sendCommand(key);
+    }
+  };
+
+  const sendCommand = (command: string) => {
     if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
       wsRef.current.send(command);
       setMessages((prev) => [...prev, `Sent: ${command}`]);
-      setCommand("");
     }
   };
+
+  useEffect(() => {
+    window.addEventListener("keydown", handleKeyDown);
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, []);
 
   return (
     <div className="80vh p-6">
       <div className="max-w-2xl mx-auto bg-white shadow-md rounded p-8">
         <h1 className="text-2xl font-bold mb-4">Real-Time Rover Control</h1>
-        <div className="flex items-center space-x-4 mb-4">
-          <input
-            type="text"
-            value={command}
-            onChange={(e) => setCommand(e.target.value)}
-            placeholder="Enter command (L, R, M, D)"
-            className="border rounded p-2 flex-grow"
-          />
-          <button
-            onClick={sendCommand}
-            className="px-4 py-2 bg-indigo-500 text-white rounded hover:bg-indigo-600 cursor-pointer"
-          >
-            Send Command
-          </button>
-        </div>
+        <p className="mb-4 text-gray-600">Press L, R, M, or D on your keyboard to send commands.</p>
         <div>
           <h2 className="text-xl font-semibold mb-2">Messages</h2>
           <ul className="list-disc list-inside space-y-1">
