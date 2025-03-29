@@ -1,7 +1,7 @@
 from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
-from typing import List, Optional
+from typing import List, Optional, Union
 import hashlib
 import itertools
 import random
@@ -52,7 +52,7 @@ class Rover(BaseModel):
     status: str  # "Not Started", "Finished", "Moving", "Eliminated"
     position: Optional[List[int]] = [0, 0]  # [x, y]
     commands: Optional[str] = ""
-    output: Optional[str] = ""
+    output: Optional[Union[str, List[List[str]]]] = ""
     pins: Optional[List[str]] = []
 
 class RoverUpdate(BaseModel):
@@ -236,28 +236,28 @@ def dispatch_rover(rover_id: int):
         else:
             continue
 
-        if not (0 <= next_x < cols and 0 <= next_y < rows):
+        if not (0 <= next_x < rows and 0 <= next_y < cols):
             continue
 
-        if rover_map[next_y][next_x] == 1:
+        if rover_map[next_x][next_y] == 1:
             if dig_flag == 'D':
-                serial_number = get_serial_number(next_x, next_y)
+                serial_number = get_serial_number(next_y, next_x)
                 pin = find_valid_pin(serial_number) if serial_number else None
                 if pin:
                     if "pins" not in rover or not rover["pins"]:
                         rover["pins"] = []
                     rover["pins"].append(pin)
                 x, y = next_x, next_y
-                output[y][x] = "*"
+                output[x][y] = "*"
             else:
                 x, y = next_x, next_y
-                output[y][x] = "*"
+                output[x][y] = "*"
                 success = False
                 message = f"Rover {rover_id} exploded at ({x}, {y})."
                 break
         else:
             x, y = next_x, next_y
-            output[y][x] = "*"
+            output[x][y] = "*"
 
     rover["position"] = [x, y]
     rover["output"] = output
