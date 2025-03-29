@@ -10,12 +10,14 @@ const ControlPage: React.FC = () => {
   const [wsUrl, setWsUrl] = useState<string | null>(null);
 
   useEffect(() => {
-    if (typeof window !== "undefined") {
-      //setWsUrl(`/api/ws/ws/rover/${roverId}`);
-      //setWsUrl(`ws://${window.location.host}/ws/rover/${roverId}`);
-      //setWsUrl(`ws://localhost:8000/ws/rover/${roverId}`);
-      setWsUrl(`${NEXT_PUBLIC_WS_BASE_URL}/ws/rover/${roverId}`);
-    }
+    const baseUrl = `${process.env.NEXT_PUBLIC_WS_BASE_URL}/ws/rover/${roverId}`;
+
+      // Check if the URL contains .com or .net and replace ws:// with wss://
+      const updatedUrl = baseUrl.replace(/^ws:\/\//, (match) => {
+        return baseUrl.includes(".com") || baseUrl.includes(".net") ? "wss://" : match;
+      });
+
+      setWsUrl(updatedUrl);
   }, []);
 
   useEffect(() => {
