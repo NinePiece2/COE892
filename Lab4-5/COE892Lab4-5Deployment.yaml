@@ -1,0 +1,70 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    run: coe892lab4-5
+  name: coe892lab4-5
+  namespace: coe892
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      run: coe892lab4-5
+  template:
+    metadata:
+      labels:
+        run: coe892lab4-5
+    spec:
+      volumes:
+        - name: ssl-cert-volume
+          secret:
+            secretName: ssl-cert
+        - name: nginx-config-volume
+          configMap:
+            name: coe892lab4-5-nginx-config
+      containers:
+        - name: coe892lab4-5
+          image: ninepiece2/coe892lab4-5:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 80
+            - containerPort: 8000
+            - containerPort: 3000
+          env:
+            - name: NODE_ENV
+              value: "production"
+            - name: API_BASE_URL
+              value: "http://localhost:8000"
+            - name: NEXT_PUBLIC_WS_BASE_URL
+              value: ""
+
+        - name: coe892lab4-5-nginx
+          image: nginx:latest
+          imagePullPolicy: Always
+          volumeMounts:
+            - name: ssl-cert-volume
+              mountPath: "/etc/ssl/certs"
+              readOnly: true
+            - name: nginx-config-volume
+              mountPath: "/etc/nginx/nginx.conf"
+              subPath: nginx.conf
+          ports:
+            - containerPort: 443
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: coe892lab4-5-service
+  namespace: coe892
+spec:
+  selector:
+    run: coe892lab4-5
+  ports:
+    - name: https
+      protocol: TCP
+      port: 443
+      targetPort: 443
+      nodePort: 30004
+  type: LoadBalancer
