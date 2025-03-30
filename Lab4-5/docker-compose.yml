@@ -1,6 +1,6 @@
 services:
   client:
-    image: coe892lab42025.azurecr.io/coe892lab42025/coe892lab4:latest
+    image: coe892lab42025.azurecr.io/coe892lab4:latest
     container_name: COE892_Lab4_5
     ports:
       - "3000:3000"
