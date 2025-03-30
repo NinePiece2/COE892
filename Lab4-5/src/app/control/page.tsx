@@ -93,7 +93,7 @@ const ControlPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen p-6">
+    <div className="80vh p-6">
       <div className="max-w-2xl mx-auto bg-white shadow-md rounded p-8">
         <h1 className="text-2xl font-bold mb-4">Real-Time Rover Control</h1>
         {!selectedRoverId ? (

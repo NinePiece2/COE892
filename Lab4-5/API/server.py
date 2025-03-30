@@ -201,6 +201,7 @@ def dispatch_rover(rover_id: int):
     if str(rover_id) not in rovers_db:
         raise HTTPException(status_code=404, detail="Rover not found")
     rover = rovers_db[str(rover_id)]
+    rover["pins"] = []
     commands = rover["commands"] or ""
     rows = len(field_map)
     cols = len(field_map[0]) if rows > 0 else 0
@@ -276,38 +277,120 @@ async def websocket_rover_control(websocket: WebSocket, rover_id: int):
         await websocket.close()
         return
     rover = rovers_db[str(rover_id)]
+    # Only allow control if rover is Not Started or Finished.
     if rover["status"] not in ["Not Started", "Finished"]:
         await websocket.send_text("Error: Rover is busy")
         await websocket.close()
         return
+
+    # Initialize state for real-time control:
     rover["commands"] = ""
-    rover["status"] = "Real-Time Control"
+    rover["status"] = "Moving"
+    # Load current position and initialize the output grid if not already set.
+    x, y = rover["position"]
+    rows = len(field_map)
+    cols = len(field_map[0]) if rows > 0 else 0
+    if not rover.get("output") or not isinstance(rover["output"], list):
+        # Create a new output grid.
+        output = [['0' for _ in range(cols)] for _ in range(rows)]
+        if 0 <= y < rows and 0 <= x < cols:
+            output[y][x] = "*"
+        rover["output"] = output
+    else:
+        # Use the existing grid.
+        output = rover["output"]
     rovers_db[str(rover_id)] = rover
     save_data("rovers.json", rovers_db)
     await websocket.send_text(f"Rover {rover_id} connected for real-time control.")
+
     try:
         while True:
             data = await websocket.receive_text()
             command = data.strip().upper()
             response = ""
-            if command in ["L", "R"]:
-                response = f"Command {command} executed: rotation successful."
-            elif command == "M":
-                pos = rover["position"]
-                new_pos = [pos[0] + 1, pos[1] + 1]
-                rover["position"] = new_pos
-                response = f"Command M executed: new position {new_pos}."
-            elif command == "D":
-                fake_pin = ''.join(random.choices(string.digits, k=4))
-                response = f"Command D executed: PIN {fake_pin}."
+            # Always refresh rows and cols.
+            rows = len(field_map)
+            cols = len(field_map[0]) if rows > 0 else 0
+
+            # Build a rover_map (field_map with mines).
+            rover_map = [row.copy() for row in field_map]
+            for key in mines_db:
+                mine = mines_db[key]
+                rover_map[mine["y"]][mine["x"]] = 1
+
+            # Get the current position from the rover state.
+            x, y = rover["position"]
+
+            # Determine the next position based on the command.
+            next_x, next_y = x, y
+            dig_flag = False
+            if command == 'L':
+                next_y -= 1
+                response = f"Rotation left. Next position will be ({next_x}, {next_y})."
+            elif command == 'R':
+                next_y += 1
+                response = f"Rotation right. Next position will be ({next_x}, {next_y})."
+            elif command == 'M':
+                next_x += 1
+                response = f"Moving. Next position will be ({next_x}, {next_y})."
+            elif command == 'D':
+                # 'D' indicates a dig command.
+                dig_flag = True
+                response = f"Attempting dig at current direction."
             else:
-                response = f"Unknown command: {command}"
+                # If an unknown command is received, ignore it.
+                continue
+
+            # Check boundaries (assuming (x,y) where x is column and y is row).
+            if not (0 <= next_x < cols and 0 <= next_y < rows):
+                await websocket.send_text("Out-of-bounds command ignored.")
+                continue
+
+            # Check if there's a mine at the next position.
+            if rover_map[next_y][next_x] == 1:
+                if dig_flag:
+                    serial_number = get_serial_number(next_x, next_y)
+                    pin = find_valid_pin(serial_number) if serial_number else None
+                    if pin:
+                        rover.setdefault("pins", []).append(pin)
+                    # Move into the cell after successful dig.
+                    x, y = next_x, next_y
+                    output[y][x] = "*"
+                    response += f" Mine at ({x}, {y}) dug successfully."
+                else:
+                    # Without a dig command, the rover explodes.
+                    x, y = next_x, next_y
+                    output[y][x] = "*"
+                    rover["status"] = "Eliminated"
+                    response = f"Rover {rover_id} exploded at ({x}, {y})."
+                    # Update state and break the loop.
+                    rover["position"] = [x, y]
+                    rover["output"] = output
+                    rover["commands"] += command
+                    rovers_db[str(rover_id)] = rover
+                    save_data("rovers.json", rovers_db)
+                    await websocket.send_text(response)
+                    break
+            else:
+                # No mine; simply move.
+                x, y = next_x, next_y
+                output[y][x] = "*"
+                response += f" Moved to ({x}, {y})."
+
+            # Update rover state.
+            rover["position"] = [x, y]
+            rover["output"] = output
             rover["commands"] += command
+            # If no explosion occurred, keep status as Moving.
+            if rover["status"] != "Eliminated":
+                rover["status"] = "Moving"
             rovers_db[str(rover_id)] = rover
             save_data("rovers.json", rovers_db)
             await websocket.send_text(response)
     except WebSocketDisconnect:
-        rover["status"] = "Finished"
+        # On disconnect, if the rover hasn't exploded, mark it as Finished.
+        if rover["status"] != "Eliminated":
+            rover["status"] = "Finished"
         rovers_db[str(rover_id)] = rover
         save_data("rovers.json", rovers_db)
         print(f"WebSocket disconnected for rover {rover_id}")
